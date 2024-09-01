@@ -1,9 +1,8 @@
 import os
 import sys
 import requests
-import webbrowser
-import socket
 import subprocess
+import webbrowser
 
 def is_connected_to_wifi():
     try:
@@ -29,25 +28,33 @@ def check_version(current_version, version_url):
         print(f"Error checking version: {e}")
         return current_version
 
-def update_program(update_script_url):
+def download_and_run_update_script(update_script_url):
     if not is_connected_to_wifi():
         print("Not connected to Wi-Fi. Cannot update the program.")
         return
 
     try:
+        # Download the update script
         response = requests.get(update_script_url)
         response.raise_for_status()
-        with open("update_script.py", "w") as file:
+        with open("update.py", "w") as file:
             file.write(response.text)
-        os.system(f"{sys.executable} update_script.py")
-        os.remove("update_script.py")
+        
+        # Run the update script
+        subprocess.run([sys.executable, "update.py"])
+        
+        # Clean up by deleting the update script
+        os.remove("update.py")
+    
     except requests.RequestException as e:
         print(f"Error downloading update script: {e}")
+    except Exception as e:
+        print(f"An error occurred while running the update script: {e}")
 
 def main():
     current_version = "1.0.0"
-    version_url = "https://website.com/version.py"
-    update_script_url = "https://website.com/update_script.py"
+    version_url = "https://bayos1.github.io/version.py"  # Replace with your actual version URL
+    update_script_url = "https://bayos1.github.io/update.py"  # Replace with your actual update script URL
 
     if not is_connected_to_wifi():
         print("Not connected to Wi-Fi. Skipping internet-dependent checks.")
@@ -55,10 +62,11 @@ def main():
         latest_version = check_version(current_version, version_url)
         if latest_version > current_version:
             print(f"A new version {latest_version} is available. You are currently on version {current_version}.")
-            choice = input("Do you want to update? (yes/no): ").strip().lower()
-            if choice == 'yes':
+            choice = input("Do you want to update? (y/n): ").strip().lower()
+            if choice == 'y':
                 print("Updating program...")
-                update_program(update_script_url)
+                download_and_run_update_script(update_script_url)
+                sys.exit()
             else:
                 print("Continuing without update...")
 
