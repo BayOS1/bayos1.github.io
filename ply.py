@@ -2,9 +2,24 @@ import os
 import sys
 import requests
 import webbrowser
-import importlib.util
+import socket
+import subprocess
+
+def is_connected_to_wifi():
+    try:
+        result = subprocess.check_output(["netsh", "wlan", "show", "interfaces"], universal_newlines=True)
+        if "State" in result and "connected" in result:
+            return True
+        else:
+            return False
+    except subprocess.CalledProcessError:
+        return False
 
 def check_version(current_version, version_url):
+    if not is_connected_to_wifi():
+        print("Not connected to Wi-Fi. Skipping version check.")
+        return current_version
+
     try:
         response = requests.get(version_url)
         response.raise_for_status()
@@ -15,6 +30,10 @@ def check_version(current_version, version_url):
         return current_version
 
 def update_program(update_script_url):
+    if not is_connected_to_wifi():
+        print("Not connected to Wi-Fi. Cannot update the program.")
+        return
+
     try:
         response = requests.get(update_script_url)
         response.raise_for_status()
@@ -26,31 +45,23 @@ def update_program(update_script_url):
         print(f"Error downloading update script: {e}")
 
 def main():
-    # Current version of your program
     current_version = "1.0.0"
+    version_url = "https://website.com/version.py"
+    update_script_url = "https://website.com/update_script.py"
 
-    # URL to check for the latest version
-    version_url = "https://website.com/version.py"  # Replace with actual URL
-    update_script_url = "https://website.com/update_script.py"  # Replace with actual URL
+    if not is_connected_to_wifi():
+        print("Not connected to Wi-Fi. Skipping internet-dependent checks.")
+    else:
+        latest_version = check_version(current_version, version_url)
+        if latest_version > current_version:
+            print(f"A new version {latest_version} is available. You are currently on version {current_version}.")
+            choice = input("Do you want to update? (yes/no): ").strip().lower()
+            if choice == 'yes':
+                print("Updating program...")
+                update_program(update_script_url)
+            else:
+                print("Continuing without update...")
 
-    # Check if requests module is installed
-    if not importlib.util.find_spec("requests"):
-        print("The 'requests' module is not installed. Please install it and run the program again.")
-        sys.exit(1)
-
-    # Check for the latest version
-    latest_version = check_version(current_version, version_url)
-    
-    if latest_version > current_version:
-        print(f"A new version {latest_version} is available. You are currently on version {current_version}.")
-        choice = input("Do you want to update? (yes/no): ").strip().lower()
-        if choice == 'yes':
-            print("Updating program...")
-            update_program(update_script_url)
-        else:
-            print("Continuing without update...")
-    
-    # Open BayOS.html with the default web browser
     html_file = "BayOS.html"
     if os.path.exists(html_file):
         webbrowser.open(f"file://{os.path.abspath(html_file)}")
