@@ -46,12 +46,12 @@ def move_new_files(from_dir, to_dir):
             print(f"Error moving {item}: {e}")
 
 def main():
-    update_zip_url = "https://bayos1.github.io/update.zip"  # Replace with your actual update zip URL
-    update_zip_path = "update.zip"
-    extract_dir = "update"
+    update_zip_url = "https://bayos1.github.io/bayos.zip"  # Replace with your actual update zip URL
+    update_zip_path = "bayos.zip"
+    extract_dir = "bayos"
 
     try:
-        # Step 1: Download the update.zip file
+        # Step 1: Download the bayos.zip file
         download_zip_file(update_zip_url, update_zip_path)
 
         # Step 2: Extract the downloaded zip file
@@ -60,10 +60,10 @@ def main():
         # Step 3: Delete existing files in the current directory, excluding the update script and other essential files
         delete_existing_files(exclude_files=[update_zip_path, __file__])
 
-        # Step 4: Move the new files from the extracted directory to the current directory
+        # Step 4: Move the new files from the extracted bayos directory to the current directory
         move_new_files(extract_dir, ".")
 
-        # Step 5: Clean up - remove the update directory and the zip file
+        # Step 5: Clean up - remove the bayos directory and the zip file
         shutil.rmtree(extract_dir)
         os.remove(update_zip_path)
 
@@ -71,6 +71,9 @@ def main():
 
         # Step 6: Run the new launcher.vbs
         subprocess.run(["cscript", "launcher.vbs"])
+
+        # Step 7: Delete the update.py script itself
+        os.remove(__file__)
     
     except Exception as e:
         print(f"Update failed: {e}")
